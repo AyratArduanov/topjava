@@ -35,7 +35,8 @@ public class UserMealsUtil {
         Map<Boolean, List<UserMealWithExcess>> result = crateEmptyMap();
         int allCalories = 0;
         for (UserMeal meal : meals) {
-            if (checkTime(meal, startTime, endTime)) {
+            LocalTime mealTime = meal.getDateTime().toLocalTime();
+            if (TimeUtil.isBetweenHalfOpen(mealTime, startTime, endTime)) {
                 fillMap(result, meal);
                 allCalories += meal.getCalories();
             }
@@ -50,7 +51,7 @@ public class UserMealsUtil {
                 .orElse(new ArrayList<>())
                 .stream()
                 .filter(Objects::nonNull)
-                .filter(meal -> checkTime(meal, startTime, endTime))
+                .filter(meal -> TimeUtil.isBetweenHalfOpen(meal.getDateTime().toLocalTime(), startTime, endTime))
                 .peek(meal -> fillMap(result, meal))
                 .map(UserMeal::getCalories)
                 .reduce(Integer::sum)
@@ -71,15 +72,4 @@ public class UserMealsUtil {
         result.get(TRUE).add(userMealWithExcessTrue);
         result.get(FALSE).add(userMealWithExcessFalse);
     }
-
-    private static boolean checkTime(UserMeal meal, LocalTime startTime, LocalTime endTime) {
-        if(startTime == null || endTime == null) throw new RuntimeException("");
-        return ofNullable(meal)
-                .map(UserMeal::getDateTime)
-                .map(LocalDateTime::toLocalTime)
-                .filter(time -> time.isAfter(startTime))
-                .filter(time -> time.isBefore(endTime))
-                .isPresent();
-    }
-
 }
